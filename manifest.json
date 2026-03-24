@@ -1,0 +1,32 @@
+{
+  "name": "ETEC Cursos",
+  "short_name": "ETEC",
+  "description": "Centro de Qualificação Profissional — Controle financeiro e de colaboradores",
+  "start_url": "/sistema",
+  "display": "standalone",
+  "background_color": "#0d2240",
+  "theme_color": "#0d2240",
+  "orientation": "portrait-primary",
+  "lang": "pt-BR",
+  "icons": [
+    {
+      "src": "/static/img/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/static/img/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/static/img/desenho.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
