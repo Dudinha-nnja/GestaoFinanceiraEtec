@@ -11,16 +11,15 @@ import json
 import os
 from datetime import date
 from sqlalchemy import text
+from dotenv import load_dotenv
 
 # ==============================
 # CONFIGURAÇÃO APP
 # ==============================
 
 load_dotenv()  # carrega o .env
-
 app = Flask(__name__)
-app.secret_key = os.getenv("SECRET_KEY")
-```
+app.secret_key = os.environ.get("SECRET_KEY", "chave-secreta-local")
 
 DATABASE_URL = os.environ.get("DATABASE_URL", "sqlite:///financeiro.db")
 if DATABASE_URL.startswith("postgres://"):
@@ -101,7 +100,7 @@ class Categoria(db.Model):
 CAMPOS_NORMAL = [
     {"key": "mes_ref",           "label": "Mês de Referência",  "desconta": False, "soValor": False, "soCaixa": False},
     {"key": "caixa",             "label": "Caixa",              "desconta": False, "soValor": True,  "soCaixa": True },
-    {"key": "valores_recebidos", "label": "Valores Recebidos",  "desconta": False, "soValor": True,  "soCaixa": False},
+    {"key": "valores_recebidos", "label": "Salário",  "desconta": False, "soValor": True,  "soCaixa": False},
     {"key": "adiantamento",      "label": "Adiantamento",       "desconta": True,  "soValor": True,  "soCaixa": False},
     {"key": "clt",               "label": "CLT",                "desconta": False, "soValor": True,  "soCaixa": False},
     {"key": "gratificacao",      "label": "Gratificação",       "desconta": False, "soValor": True,  "soCaixa": False},

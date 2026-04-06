@@ -38,12 +38,12 @@ if (colaboradorForm) {
         const cpf    = document.getElementById("cpf").value
         const numero = document.getElementById("numeroColaborador").value
         const cargo  = document.getElementById("cargoColaborador").value
-        const pix    = (document.getElementById("pixColaborador")?.value || "").trim()  // ← PIX
+        const pix    = (document.getElementById("pixColaborador")?.value || "").trim()
         if (!nome || !cpf || !numero || !cargo) return
         await fetch("/api/colaboradores", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ nome, cpf, numero, cargo, pix })  // ← PIX
+            body: JSON.stringify({ nome, cpf, numero, cargo, pix })
         })
         e.target.reset()
         carregarColaboradores()
@@ -91,16 +91,13 @@ let _fichaEditandoId = null
 
 
 // ======================================================
-// CAMPOS DAS FICHAS (campos fixos)
-// soCaixa: true  → só entra no "Caixa gerado", NÃO no salário líquido
-// desconta: true → subtrai do salário líquido
-// soValor: false → campo de texto (não numérico)
+// CAMPOS DAS FICHAS
 // ======================================================
 
 const CAMPOS_NORMAL = [
     { key: "mes_ref",           label: "Mês de Referência",  desc: "Competência",              desconta: false, soValor: false, soCaixa: false },
     { key: "caixa",             label: "Caixa",              desc: "Caixa gerado no mês",      desconta: false, soValor: true,  soCaixa: true  },
-    { key: "valores_recebidos", label: "Valores Recebidos",  desc: "Entradas do período",      desconta: false, soValor: true,  soCaixa: false },
+    { key: "valores_recebidos", label: "Salário",  desc: "Entradas do período",      desconta: false, soValor: true,  soCaixa: false },
     { key: "adiantamento",      label: "Adiantamento",       desc: "Descontado do total",      desconta: true,  soValor: true,  soCaixa: false },
     { key: "clt",               label: "CLT",                desc: "Salário base CLT",         desconta: false, soValor: true,  soCaixa: false },
     { key: "gratificacao",      label: "Gratificação",       desc: "Bônus / gratificação",     desconta: false, soValor: true,  soCaixa: false },
@@ -147,14 +144,23 @@ function preencherHeaderModal(colaborador) {
     if (elCargo) elCargo.textContent = colaborador.cargo?.toUpperCase() || ""
 }
 
-// ← FUNÇÃO COPIAR PIX
 function copiarPix(pix) {
     if (navigator.clipboard && window.isSecureContext) {
-        navigator.clipboard.writeText(pix)  // HTTPS
+        navigator.clipboard.writeText(pix)
     } else {
-        copiarPixFallback(pix)  // HTTP — usa execCommand
+        copiarPixFallback(pix)
     }
 }
+
+function copiarPixFallback(pix) {
+    const el = document.createElement("textarea")
+    el.value = pix
+    document.body.appendChild(el)
+    el.select()
+    document.execCommand("copy")
+    document.body.removeChild(el)
+}
+
 
 // ======================================================
 // MODAL: ABRIR / FECHAR
@@ -202,14 +208,12 @@ function renderFichaModal(tipo, dadosIniciais = null) {
     const corpo  = document.getElementById("conteudoFicha")
     corpo.innerHTML = ""
 
-    // Extrai dados salvos
     const dados    = dadosIniciais ? { ...dadosIniciais } : {}
     const riscados = dados["__riscados__"] || {}
-    const extras   = dados["__outros__"]   || []   // array de { label, valor, riscado }
+    const extras   = dados["__outros__"]   || []
     delete dados["__riscados__"]
     delete dados["__outros__"]
 
-    // ── Cards de resumo ──────────────────────────────
     const resumo = document.createElement("div")
     resumo.className = "ficha-resumo"
     resumo.innerHTML = `
@@ -224,7 +228,6 @@ function renderFichaModal(tipo, dadosIniciais = null) {
     `
     corpo.appendChild(resumo)
 
-    // ── Cabeçalho da lista ───────────────────────────
     const listHeader = document.createElement("div")
     listHeader.className = "ficha-lista-header"
     listHeader.innerHTML = `
@@ -233,7 +236,6 @@ function renderFichaModal(tipo, dadosIniciais = null) {
     `
     corpo.appendChild(listHeader)
 
-    // ── Lista de campos fixos ────────────────────────
     const lista = document.createElement("div")
     lista.className = "ficha-lista"
     lista.id = "listaFixa"
@@ -245,13 +247,11 @@ function renderFichaModal(tipo, dadosIniciais = null) {
         lista.appendChild(criarItemFolha(campo, valorSalvo, estaRiscado, idx === campos.length - 1, campos))
     })
 
-    // ── Seção OUTROS ─────────────────────────────────
     const outrosWrap = document.createElement("div")
     outrosWrap.id = "outrosWrap"
     outrosWrap.style.cssText = "margin-top:10px;"
     corpo.appendChild(outrosWrap)
 
-    // Cabeçalho da seção outros
     const outrosHeader = document.createElement("div")
     outrosHeader.style.cssText = `
         display:flex; align-items:center; justify-content:space-between;
@@ -264,21 +264,17 @@ function renderFichaModal(tipo, dadosIniciais = null) {
     `
     outrosWrap.appendChild(outrosHeader)
 
-    // Container dos itens extras
     const outrosList = document.createElement("div")
     outrosList.className = "ficha-lista"
     outrosList.id = "outrosList"
     outrosWrap.appendChild(outrosList)
 
-    // Restaura itens extras salvos
     extras.forEach(extra => {
         adicionarItemOutros(extra.label || "", extra.valor || "", extra.riscado === true)
     })
 
-    // Placeholder quando vazio
     atualizarPlaceholderOutros()
 
-    // Botão adicionar item extra (só admin)
     if (IS_ADMIN) {
         const btnAdd = document.createElement("button")
         btnAdd.className = "ficha-btn-add-linha"
@@ -312,7 +308,6 @@ function adicionarItemOutros(labelInicial, valorInicial, estaRiscado) {
     item.dataset.riscado = estaRiscado ? "1" : "0"
     item.style.borderBottom = "1px solid var(--cinza-borda)"
 
-    // Checkbox
     const check = document.createElement("div")
     check.className = "ficha-check-box"
     check.style.cssText = `
@@ -331,7 +326,6 @@ function adicionarItemOutros(labelInicial, valorInicial, estaRiscado) {
         }
     }
 
-    // Input do label
     const infoWrap = document.createElement("div")
     infoWrap.className = "ficha-item-info"
 
@@ -369,7 +363,6 @@ function adicionarItemOutros(labelInicial, valorInicial, estaRiscado) {
     item.appendChild(infoWrap)
     item.appendChild(valorEl)
 
-    // Botão remover (só admin)
     if (IS_ADMIN) {
         const btnRem = document.createElement("button")
         btnRem.className = "ficha-btn-remover"
@@ -500,7 +493,7 @@ function aplicarEstadoRiscadoOutro(item, riscado, campos) {
 
 
 // ======================================================
-// RECALCULAR TUDO (campos fixos + outros)
+// RECALCULAR TUDO
 // ======================================================
 
 function recalcularTudo(campos) {
@@ -509,7 +502,6 @@ function recalcularTudo(campos) {
 
     let caixa = 0, entradas = 0, descontos = 0
 
-    // Campos fixos
     campos.forEach(c => {
         if (!c.soValor) return
         const item = corpo.querySelector(`#listaFixa [data-campo-key="${c.key}"]`)
@@ -522,7 +514,6 @@ function recalcularTudo(campos) {
         else                 entradas  += v
     })
 
-    // Itens da seção Outros — todos tratados como desconto
     const outrosItens = corpo.querySelectorAll("#outrosList .ficha-item--outro")
     outrosItens.forEach(item => {
         if (item.dataset.riscado === "1") return
@@ -552,7 +543,6 @@ function serializarFicha(campos) {
     const dados    = {}
     const riscados = {}
 
-    // Campos fixos
     campos.forEach(c => {
         const item  = corpo.querySelector(`#listaFixa [data-campo-key="${c.key}"]`)
         const input = item?.querySelector("input")
@@ -562,7 +552,6 @@ function serializarFicha(campos) {
 
     if (Object.keys(riscados).length > 0) dados["__riscados__"] = riscados
 
-    // Itens Outros
     const outrosItens = corpo.querySelectorAll("#outrosList .ficha-item--outro")
     const extras = []
     outrosItens.forEach(item => {
@@ -757,57 +746,59 @@ async function carregarFichas(colaboradorId) {
         return
     }
 
+    fichas.forEach(f => {
+        const row = document.createElement("div")
+        row.className = "border p-2 rounded bg-gray-50 flex justify-between items-center hover:bg-gray-100 cursor-pointer"
 
+        let autorLabel = ""
+        if (f.ultimaAlteracao) {
+            const dt = new Date(f.ultimaAlteracao)
+            const hh = dt.getHours().toString().padStart(2, "0")
+            const mm = dt.getMinutes().toString().padStart(2, "0")
+            const primeiroNome = f.alteradoPor ? f.alteradoPor.trim().split(" ")[0] : ""
+            autorLabel = `<span style="font-size:0.68rem;color:#aab2c0;display:block;margin-top:2px;">
+                Salvo às ${hh}:${mm}${primeiroNome ? " por " + primeiroNome : ""}
+            </span>`
+        }
 
-  fichas.forEach(f => {
-    const row = document.createElement("div")
-    row.className = "border p-2 rounded bg-gray-50 flex justify-between items-center hover:bg-gray-100 cursor-pointer"
+        const btnExcluir = IS_ADMIN
+            ? `<button class="text-red-500"
+                onclick="event.stopPropagation(); excluirFicha(${f.id}, ${colaboradorId})">
+                Excluir</button>`
+            : ''
 
-    // ── Monta label de autoria ──────────────────────────
-    let autorLabel = ""
-    if (f.ultimaAlteracao) {
-        const dt = new Date(f.ultimaAlteracao)
-        const hh = dt.getHours().toString().padStart(2, "0")
-        const mm = dt.getMinutes().toString().padStart(2, "0")
-        const primeiroNome = f.alteradoPor ? f.alteradoPor.trim().split(" ")[0] : ""
-        autorLabel = `<span style="font-size:0.68rem;color:#aab2c0;display:block;margin-top:2px;">
-            Salvo às ${hh}:${mm}${primeiroNome ? " por " + primeiroNome : ""}
-        </span>`
-    }
-
-    const btnExcluir = IS_ADMIN
-        ? `<button class="text-red-500"
-            onclick="event.stopPropagation(); excluirFicha(${f.id}, ${colaboradorId})">
-            Excluir</button>`
-        : ''
-
-    row.innerHTML = `
-        <div style="display:flex;flex-direction:column;flex:1;min-width:0;">
-            <span style="font-size:0.85rem;font-weight:600;">📄 ${f.nome_ficha}
-                <span style="font-size:0.72rem;color:#aab2c0;font-weight:400;">
-                    ${f.tipo === 'meta' ? ' · Metas' : ' · Normal'}
+        row.innerHTML = `
+            <div style="display:flex;flex-direction:column;flex:1;min-width:0;">
+                <span style="font-size:0.85rem;font-weight:600;">📄 ${f.nome_ficha}
+                    <span style="font-size:0.72rem;color:#aab2c0;font-weight:400;">
+                        ${f.tipo === 'meta' ? ' · Metas' : ' · Normal'}
+                    </span>
                 </span>
-            </span>
-            ${autorLabel}
-        </div>
-        <div class="flex gap-3" style="flex-shrink:0;">
-            <button class="text-blue-600"
-                onclick="event.stopPropagation(); baixarPDF(${f.id})">PDF</button>
-            ${btnExcluir}
-        </div>
-    `
+                ${autorLabel}
+            </div>
+            <div class="flex gap-3" style="flex-shrink:0;">
+                <button class="text-blue-600"
+                    onclick="event.stopPropagation(); baixarPDF(${f.id})">PDF</button>
+                ${btnExcluir}
+            </div>
+        `
 
-    row.addEventListener("click", () => {
-        const cardPai = document.querySelector(`[data-colab-id="${colaboradorId}"]`)
-        const colaborador = cardPai
-            ? JSON.parse(cardPai.dataset.colabJson)
-            : { id: colaboradorId, nome: "—", cargo: "" }
-        abrirFicha(f, colaborador)
+        row.addEventListener("click", () => {
+            const cardPai = document.querySelector(`[data-colab-id="${colaboradorId}"]`)
+            const colaborador = cardPai
+                ? JSON.parse(cardPai.dataset.colabJson)
+                : { id: colaboradorId, nome: "—", cargo: "" }
+            abrirFicha(f, colaborador)
+        })
+
+        miniCard.appendChild(row)
     })
+} // ← fecha carregarFichas
 
-    miniCard.appendChild(row)
-})
 
+// ======================================================
+// ABRIR FICHA EXISTENTE — ESCOPO GLOBAL
+// ======================================================
 
 function abrirFicha(ficha, colaborador) {
     document.body.style.overflow = "hidden"
@@ -846,6 +837,11 @@ function abrirFicha(ficha, colaborador) {
     document.getElementById("modalFicha").classList.remove("hidden")
 }
 
+
+// ======================================================
+// EXCLUIR FICHA — ESCOPO GLOBAL
+// ======================================================
+
 async function excluirFicha(fichaId, colaboradorId) {
     if (!IS_ADMIN) return
     if (!confirm("Deseja excluir essa ficha?")) return
@@ -854,9 +850,16 @@ async function excluirFicha(fichaId, colaboradorId) {
     popup("Ficha excluída.")
 }
 
+
+// ======================================================
+// BAIXAR PDF — ESCOPO GLOBAL
+// ======================================================
+
 function baixarPDF(id) {
     window.open(`/api/fichas/pdf/${id}`, "_blank")
-}}
+}
+
+
 // ======================================================
 // LISTAR COLABORADORES
 // ======================================================
@@ -949,7 +952,6 @@ async function carregarColaboradores() {
             padding:14px 16px;
         `
 
-        // ── Detalhes: igual ao original + linha PIX via DOM ──
         const detalhes = document.createElement("div")
         detalhes.style.cssText = `
             display:grid;grid-template-columns:1fr 1fr;gap:4px;
@@ -963,7 +965,6 @@ async function carregarColaboradores() {
             <span><strong style="color:var(--texto);">Cargo:</strong> ${c.cargo}</span>
         `
 
-        // ← LINHA PIX (adicionada via DOM, sem template aninhado)
         if (c.pix) {
             const linhaPix = document.createElement("span")
             linhaPix.style.cssText = "grid-column:span 2;display:flex;align-items:center;gap:6px;margin-top:4px;padding-top:6px;border-top:1px solid var(--cinza-borda);"
@@ -1072,6 +1073,11 @@ async function carregarColaboradores() {
         else         listaDesativados.appendChild(div)
     })
 }
+
+
+// ======================================================
+// ALTERAR STATUS / EXCLUIR COLABORADOR
+// ======================================================
 
 async function alterarStatus(id) {
     if (!IS_ADMIN) return
